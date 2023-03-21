@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     tf
+    autoware_msgs
     )
 
 set(SOURCES

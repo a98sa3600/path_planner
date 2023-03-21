@@ -15,6 +15,7 @@ Planner::Planner() {
   // _________________
   // TOPICS TO PUBLISH
   pubStart = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/start", 1);
+  lane_pub_ = n.advertise<autoware_msgs::LaneArray>("/based/lane_waypoints_raw", 10, true);
 
   // ___________________
   // TOPICS TO SUBSCRIBE
@@ -25,7 +26,7 @@ Planner::Planner() {
   }
 
   subGoal = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
-  subStart = n.subscribe("/initialpose", 1, &Planner::setStart, this);
+  subStart = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
 };
 
 //###################################################
@@ -110,7 +111,11 @@ void Planner::setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&
 
   std::cout << "I am seeing a new start x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
 
-  if (grid->info.height >= y && y >= 0 && grid->info.width >= x && x >= 0) {
+  Eigen::VectorXd v(2);
+  v << x-grid->info.origin.position.x, y-grid->info.origin.position.y;
+
+  if ( v(0) <= (grid->info.width)*Constants::cellSize && v(0) >= 0 && 
+        v(1) <= (grid->info.height)*Constants::cellSize && v(1) >= 0) {
     validStart = true;
     start = *initial;
 
@@ -133,8 +138,11 @@ void Planner::setGoal(const geometry_msgs::PoseStamped::ConstPtr& end) {
   float t = tf::getYaw(end->pose.orientation);
 
   std::cout << "I am seeing a new goal x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
+  Eigen::VectorXd v(2);
+  v << x-grid->info.origin.position.x, y-grid->info.origin.position.y;
 
-  if (grid->info.height >= y && y >= 0 && grid->info.width >= x && x >= 0) {
+  if (v(0) <= (grid->info.width)*Constants::cellSize && v(0) >= 0 && 
+        v(1) <= (grid->info.height)*Constants::cellSize && v(1) >= 0) {
     validGoal = true;
     goal = *end;
 
@@ -164,12 +172,15 @@ void Planner::plan() {
 
     // ________________________
     // retrieving goal position
-    float x = goal.pose.position.x / Constants::cellSize;
-    float y = goal.pose.position.y / Constants::cellSize;
+    float origin_x = grid->info.origin.position.x;
+    float origin_y = grid->info.origin.position.y;
+    float x = (goal.pose.position.x-origin_x) / Constants::cellSize;
+    float y = (goal.pose.position.y-origin_y) / Constants::cellSize;
     float t = tf::getYaw(goal.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     const Node3D nGoal(x, y, t, 0, 0, nullptr);
+    std::cout << "goal: " << x << ", " << y << std::endl;
     // __________
     // DEBUG GOAL
     //    const Node3D nGoal(155.349, 36.1969, 0.7615936, 0, 0, nullptr);
@@ -177,12 +188,13 @@ void Planner::plan() {
 
     // _________________________
     // retrieving start position
-    x = start.pose.pose.position.x / Constants::cellSize;
-    y = start.pose.pose.position.y / Constants::cellSize;
+    x = (start.pose.pose.position.x-origin_x) / Constants::cellSize;
+    y = (start.pose.pose.position.y-origin_y) / Constants::cellSize;
     t = tf::getYaw(start.pose.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     Node3D nStart(x, y, t, 0, 0, nullptr);
+    std::cout << "start: " << x << ", " << y << std::endl;
     // ___________
     // DEBUG START
     //    Node3D nStart(108.291, 30.1081, 0, 0, 0, nullptr);
@@ -201,28 +213,27 @@ void Planner::plan() {
     Node3D* nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization);
     // TRACE THE PATH
     smoother.tracePath(nSolution);
+
     // CREATE THE UPDATED PATH
-    path.updatePath(smoother.getPath());
-    // SMOOTH THE PATH
-    smoother.smoothPath(voronoiDiagram);
-    // CREATE THE UPDATED PATH
-    smoothedPath.updatePath(smoother.getPath());
-    ros::Time t1 = ros::Time::now();
-    ros::Duration d(t1 - t0);
-    std::cout << "TIME in ms: " << d * 1000 << std::endl;
+    std::vector<Node3D> nodes = smoother.getPath();
+    for (int i = 0; i < nodes.size(); i++){
+      nodes[i].setX(origin_x + (nodes[i].getX()*Constants::cellSize));
+      nodes[i].setY(origin_y + (nodes[i].getY()*Constants::cellSize));
+      std::cout << "(x,y) = " << nodes[i].getX() << ", " << nodes[i].getY() << std::endl;
+    }
+    path.updatePath(nodes);
+
+    // ros::Time t1 = ros::Time::now();
+    // ros::Duration d(t1 - t0);
+    // std::cout << "TIME in ms: " << d * 1000 << std::endl;
 
     // _________________________________
     // PUBLISH THE RESULTS OF THE SEARCH
     path.publishPath();
     path.publishPathNodes();
     path.publishPathVehicles();
-    smoothedPath.publishPath();
-    smoothedPath.publishPathNodes();
-    smoothedPath.publishPathVehicles();
-    visualization.publishNode3DCosts(nodes3D, width, height, depth);
-    visualization.publishNode2DCosts(nodes2D, width, height);
 
-
+    createWayPoint(nodes);
 
     delete [] nodes3D;
     delete [] nodes2D;
@@ -230,4 +241,49 @@ void Planner::plan() {
   } else {
     std::cout << "missing goal or start" << std::endl;
   }
+}
+
+inline double kmph2mps(double velocity_kmph){
+  return (velocity_kmph * 1000) / (60 * 60);
+}
+    
+void Planner::createWayPoint(std::vector<Node3D> goal){
+    autoware_msgs::LaneArray lane_array;
+    autoware_msgs::Lane lane;
+    std::vector<autoware_msgs::Waypoint> wps;
+    std::vector<Node3D> nodes = goal;
+    int count = 0;
+    for (int i = 0; i < nodes.size(); i++){
+        count+=1;
+        autoware_msgs::Waypoint wp;
+        wp.pose.pose.position.x = nodes[i].getX();
+        wp.pose.pose.position.y = nodes[i].getY();
+        wp.pose.pose.position.z = -3893.38; //Setting it wrong may cause problem publishing /safety_waypoint in the Astar_avoid.
+        wp.twist.twist.linear.x = kmph2mps(10);
+        wp.change_flag = 0;
+        wp.wpstate.steering_state = 0;
+        wp.wpstate.accel_state = 0;
+        wp.wpstate.stop_state  = 0;
+        wp.wpstate.event_state = 0;
+        wps.emplace_back(wp);
+    }
+    std::reverse(wps.begin(), wps.end());
+    size_t last = count - 1;
+    for (size_t i = 0; i < wps.size(); ++i)
+    {
+        if (i != last){
+        double yaw = atan2(wps.at(i + 1).pose.pose.position.y - wps.at(i).pose.pose.position.y,
+                            wps.at(i + 1).pose.pose.position.x - wps.at(i).pose.pose.position.x);
+        wps.at(i).pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+        }
+        else{
+        wps.at(i).pose.pose.orientation = wps.at(i - 1).pose.pose.orientation;
+        }
+    }
+    lane.header.frame_id = "map";
+    lane.header.stamp = ros::Time::now();
+    
+    lane.waypoints = wps;
+    lane_array.lanes.emplace_back(lane);
+    lane_pub_.publish(lane_array);
 }

@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   ros::NodeHandle n;
 
   // subscribe to map updates
-  ros::Subscriber sub_map = n.subscribe("/occ_map", 1, setMap);
+  ros::Subscriber sub_map = n.subscribe("/map", 1, setMap);
   tf::Pose tfPose;
 
 
@@ -35,10 +35,10 @@ int main(int argc, char** argv) {
     }
 
     // odom to map
-    broadcaster.sendTransform(
-      tf::StampedTransform(
-        tf::Transform(tf::Quaternion(0, 0, 0, 1), tfPose.getOrigin()),
-        ros::Time::now(), "odom", "map"));
+    // broadcaster.sendTransform(
+    //   tf::StampedTransform(
+    //     tf::Transform(tf::Quaternion(0, 0, 0, 1), tfPose.getOrigin()),
+    //     ros::Time::now(), "odom", "map"));
 
     // map to path
     broadcaster.sendTransform(

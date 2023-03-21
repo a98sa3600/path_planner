@@ -9,6 +9,9 @@
 #include <tf/transform_listener.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <autoware_msgs/LaneArray.h>
+#include <autoware_msgs/Waypoint.h>
+#include <autoware_msgs/Lane.h>
 
 #include "constants.h"
 #include "helper.h"
@@ -62,6 +65,8 @@ class Planner {
   */
   void plan();
 
+  void createWayPoint(std::vector<Node3D> goal);
+
  private:
   /// The node handle
   ros::NodeHandle n;
@@ -77,6 +82,8 @@ class Planner {
   tf::TransformListener listener;
   /// A transform for moving start positions
   tf::StampedTransform transform;
+  // A publisher publishing the path for waypoint
+  ros::Publisher lane_pub_;         
   /// The path produced by the hybrid A* algorithm
   Path path;
   /// The smoother used for optimizing the path
