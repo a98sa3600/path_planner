@@ -99,8 +99,8 @@ void Planner::setMap(const nav_msgs::OccupancyGrid::Ptr map) {
 //                                   INITIALIZE START
 //###################################################
 void Planner::setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& initial) {
-  float x = initial->pose.pose.position.x / Constants::cellSize;
-  float y = initial->pose.pose.position.y / Constants::cellSize;
+  float x = initial->pose.pose.position.x;
+  float y = initial->pose.pose.position.y;
   float t = tf::getYaw(initial->pose.pose.orientation);
   // publish the start without covariance for rviz
   geometry_msgs::PoseStamped startN;
@@ -133,8 +133,8 @@ void Planner::setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&
 //###################################################
 void Planner::setGoal(const geometry_msgs::PoseStamped::ConstPtr& end) {
   // retrieving goal position
-  float x = end->pose.position.x / Constants::cellSize;
-  float y = end->pose.position.y / Constants::cellSize;
+  float x = end->pose.position.x;
+  float y = end->pose.position.y;
   float t = tf::getYaw(end->pose.orientation);
 
   std::cout << "I am seeing a new goal x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;

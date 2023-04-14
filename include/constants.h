@@ -60,9 +60,14 @@ static const int iterations = 30000;
 /// [m] --- Uniformly adds a padding around the vehicle
 static const double bloating = 0;
 /// [m] --- The width of the vehicle
-static const double width = 1.75 + 2 * bloating;
+// original parameter
+// static const double width = 1.75 + 2 * bloating;
+// cwc
+static const double width = 0.1 + 2 * bloating;
 /// [m] --- The length of the vehicle
-static const double length = 2.65 + 2 * bloating;
+// original parameter
+// static const double length = 2.65 + 2 * bloating;
+static const double length = 0.1 + 2 * bloating;
 /// [m] --- The minimum turning radius of the vehicle
 static const float r = 6;
 /// [m] --- The number of discretizations in heading
@@ -74,7 +79,7 @@ static const float deltaHeadingRad = 2 * M_PI / (float)headings;
 /// [c*M_PI] --- The heading part of the goal condition
 static const float deltaHeadingNegRad = 2 * M_PI - deltaHeadingRad;
 /// [m] --- The cell size of the 2D grid of the world
-static const float cellSize = 1;
+static const float cellSize = 0.5;
 /*!
   \brief [m] --- The tie breaker breaks ties between nodes expanded in the same cell
 
