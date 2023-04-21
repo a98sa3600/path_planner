@@ -12,6 +12,7 @@
 #include <autoware_msgs/LaneArray.h>
 #include <autoware_msgs/Waypoint.h>
 #include <autoware_msgs/Lane.h>
+#include <Eigen/Dense>
 
 #include "constants.h"
 #include "helper.h"
