@@ -38,7 +38,7 @@ static const bool visualization = false && manual;
 /// A flag for the visualization of 2D nodes (true = on; false = off)
 static const bool visualization2D = false && manual;
 /// A flag to toggle reversing (true = on; false = off)
-static const bool reverse = true;
+static const bool reverse = false;
 /// A flag to toggle the connection of the path via Dubin's shot (true = on; false = off)
 static const bool dubinsShot = true;
 /// A flag to toggle the Dubin's heuristic, this should be false, if reversing is enabled (true = on; false = off)
@@ -56,7 +56,7 @@ static const bool twoD = true;
 // GENERAL CONSTANTS
 
 /// [#] --- Limits the maximum search depth of the algorithm, possibly terminating without the solution
-static const int iterations = 30000;
+static const int iterations = 50000;
 /// [m] --- Uniformly adds a padding around the vehicle
 static const double bloating = 0;
 /// [m] --- The width of the vehicle

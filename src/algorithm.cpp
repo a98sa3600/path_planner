@@ -46,8 +46,8 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   // Number of iterations the algorithm has run for stopping based on Constants::iterations
   int iterations = 0;
 
-  // VISUALIZATION DELAY
-  ros::Duration d(0.003);
+  // // VISUALIZATION DELAY
+  // ros::Duration d(0.003);
 
   // OPEN LIST AS BOOST IMPLEMENTATION
   typedef boost::heap::binomial_heap<Node3D*,
@@ -69,7 +69,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   Node3D* nSucc;
 
   // float max = 0.f;
-
+  std::cout << "start seach by hybrid_astar" << std::endl;
   // continue until O empty
   while (!O.empty()) {
 
@@ -128,12 +128,12 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
     iPred = nPred->setIdx(width, height);
     iterations++;
 
-    // RViz visualization
-    if (Constants::visualization) {
-      visualization.publishNode3DPoses(*nPred);
-      visualization.publishNode3DPose(*nPred);
-      d.sleep();
-    }
+    // // RViz visualization
+    // if (Constants::visualization) {
+    //   visualization.publishNode3DPoses(*nPred);
+    //   visualization.publishNode3DPose(*nPred);
+    //   d.sleep();
+    // }
 
     // _____________________________
     // LAZY DELETION of rewired node
@@ -153,14 +153,13 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 
       // _________
       // GOAL TEST
-      if (*nPred == goal || iterations > Constants::iterations) {
-        // DEBUG
+      if (*nPred == goal) {
+        std::cout << "return nPred" << std::endl;
         return nPred;
       }
-
-      // ____________________
-      // CONTINUE WITH SEARCH
-      else {
+        // ____________________
+        // CONTINUE WITH SEARCH
+      else { 
         // _______________________
         // SEARCH WITH DUBINS SHOT
         if (Constants::dubinsShot && nPred->isInRange(goal) && nPred->getPrim() < 3) {
@@ -169,6 +168,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
           if (nSucc != nullptr && *nSucc == goal) {
             //DEBUG
             // std::cout << "max diff " << max << std::endl;
+            std::cout << "return nSucc" << std::endl;
             return nSucc;
           }
         }
@@ -219,15 +219,22 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
               } else { delete nSucc; }
             } else { delete nSucc; }
           } else { delete nSucc; }
-        }
+        } 
+      }
+    
+      if(iterations > Constants::iterations){
+        std::cout << "over iterations"<< std::endl;            
+        std::cout << "iterations" << iterations << std::endl;        
+        return nullptr;
       }
     }
   }
 
-  if (O.empty()) {
-    return nullptr;
-  }
-
+  // if (O.empty()) {
+  //   std::cout << "return empty nullptr" << std::endl;  
+  //   return nullptr;
+  // }
+  std::cout << "please choose correct start and goal" << std::endl;  
   return nullptr;
 }
 

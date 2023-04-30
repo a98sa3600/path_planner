@@ -180,7 +180,7 @@ void Planner::plan() {
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     const Node3D nGoal(x, y, t, 0, 0, nullptr);
-    std::cout << "goal: " << x << ", " << y << std::endl;
+    std::cout << "goal: " << x << ", " << y << ", "<< t << std::endl;
     // __________
     // DEBUG GOAL
     //    const Node3D nGoal(155.349, 36.1969, 0.7615936, 0, 0, nullptr);
@@ -194,7 +194,7 @@ void Planner::plan() {
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     Node3D nStart(x, y, t, 0, 0, nullptr);
-    std::cout << "start: " << x << ", " << y << std::endl;
+    std::cout << "start: " << x << ", " << y << ", "<< t << std::endl;
     // ___________
     // DEBUG START
     //    Node3D nStart(108.291, 30.1081, 0, 0, 0, nullptr);
@@ -206,9 +206,9 @@ void Planner::plan() {
 
     // CLEAR THE VISUALIZATION
     visualization.clear();
-    // CLEAR THE PATH
-    path.clear();
-    smoothedPath.clear();
+    // // CLEAR THE PATH
+    // path.clear();
+    // smoothedPath.clear();
     // FIND THE PATH
     Node3D* nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization);
     // TRACE THE PATH
