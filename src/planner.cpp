@@ -26,7 +26,13 @@ Planner::Planner() {
   }
 
   subGoal = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
-  subStart = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
+
+  if (Constants::startTopic) {
+    subStart = n.subscribe("/current_pose", 1, &Planner::setStart, this);
+  } else {
+    subStart = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
+  }  
+  
 };
 
 //###################################################
@@ -169,14 +175,27 @@ void Planner::plan() {
     // define list pointers and initialize lists
     Node3D* nodes3D = new Node3D[length]();
     Node2D* nodes2D = new Node2D[width * height]();
+    float origin_x = grid->info.origin.position.x;
+    float origin_y = grid->info.origin.position.y;
+
+    // _________________________
+    // retrieving start position
+    float x = (start.pose.pose.position.x-origin_x) / Constants::cellSize;
+    float y = (start.pose.pose.position.y-origin_y) / Constants::cellSize;
+    float t = tf::getYaw(start.pose.pose.orientation);
+    // set theta to a value (0,2PI]
+    t = Helper::normalizeHeadingRad(t);
+    Node3D nStart(x, y, t, 0, 0, nullptr);
+    std::cout << "start: " << x << ", " << y << ", "<< t << std::endl;
+    // ___________
+    // DEBUG START
+    //    Node3D nStart(108.291, 30.1081, 0, 0, 0, nullptr);  
 
     // ________________________
     // retrieving goal position
-    float origin_x = grid->info.origin.position.x;
-    float origin_y = grid->info.origin.position.y;
-    float x = (goal.pose.position.x-origin_x) / Constants::cellSize;
-    float y = (goal.pose.position.y-origin_y) / Constants::cellSize;
-    float t = tf::getYaw(goal.pose.orientation);
+    x = (goal.pose.position.x-origin_x) / Constants::cellSize;
+    y = (goal.pose.position.y-origin_y) / Constants::cellSize;
+    t = tf::getYaw(goal.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     const Node3D nGoal(x, y, t, 0, 0, nullptr);
@@ -186,18 +205,7 @@ void Planner::plan() {
     //    const Node3D nGoal(155.349, 36.1969, 0.7615936, 0, 0, nullptr);
 
 
-    // _________________________
-    // retrieving start position
-    x = (start.pose.pose.position.x-origin_x) / Constants::cellSize;
-    y = (start.pose.pose.position.y-origin_y) / Constants::cellSize;
-    t = tf::getYaw(start.pose.pose.orientation);
-    // set theta to a value (0,2PI]
-    t = Helper::normalizeHeadingRad(t);
-    Node3D nStart(x, y, t, 0, 0, nullptr);
-    std::cout << "start: " << x << ", " << y << ", "<< t << std::endl;
-    // ___________
-    // DEBUG START
-    //    Node3D nStart(108.291, 30.1081, 0, 0, 0, nullptr);
+
 
 
     // ___________________________
@@ -219,13 +227,13 @@ void Planner::plan() {
     for (int i = 0; i < nodes.size(); i++){
       nodes[i].setX(origin_x + (nodes[i].getX()*Constants::cellSize));
       nodes[i].setY(origin_y + (nodes[i].getY()*Constants::cellSize));
-      std::cout << "(x,y) = " << nodes[i].getX() << ", " << nodes[i].getY() << std::endl;
+      // std::cout << "(x,y) = " << nodes[i].getX() << ", " << nodes[i].getY() << std::endl;
     }
     path.updatePath(nodes);
 
-    // ros::Time t1 = ros::Time::now();
-    // ros::Duration d(t1 - t0);
-    // std::cout << "TIME in ms: " << d * 1000 << std::endl;
+    ros::Time t1 = ros::Time::now();
+    ros::Duration d(t1 - t0);
+    std::cout << "TIME in ms: " << d * 1000 << std::endl;
 
     // _________________________________
     // PUBLISH THE RESULTS OF THE SEARCH

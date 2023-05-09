@@ -42,7 +42,7 @@ static const bool reverse = false;
 /// A flag to toggle the connection of the path via Dubin's shot (true = on; false = off)
 static const bool dubinsShot = true;
 /// A flag to toggle the Dubin's heuristic, this should be false, if reversing is enabled (true = on; false = off)
-static const bool dubins = false;
+static const bool dubins = true;
 /*!
    \var static const bool dubinsLookup
    \brief A flag to toggle the Dubin's heuristic via lookup, potentially speeding up the search by a lot
@@ -51,7 +51,8 @@ static const bool dubins = false;
 static const bool dubinsLookup = false && dubins;
 /// A flag to toggle the 2D heuristic (true = on; false = off)
 static const bool twoD = true;
-
+/// A flag to toggle topic of start pose(ture = /current_pose ,false = /astar/initialpose ) 
+static const bool startTopic = false;
 // _________________
 // GENERAL CONSTANTS
 
@@ -102,7 +103,7 @@ static const float penaltyReversing = 2.0;
 /// [#] --- A movement cost penalty for change of direction (changing from primitives < 3 to primitives > 2)
 static const float penaltyCOD = 2.0;
 /// [m] --- The distance to the goal when the analytical solution (Dubin's shot) first triggers
-static const float dubinsShotDistance = 100;
+static const float dubinsShotDistance = 20;
 /// [m] --- The step size for the analytical solution (Dubin's shot) primarily relevant for collision checking
 static const float dubinsStepSize = 1;
 
