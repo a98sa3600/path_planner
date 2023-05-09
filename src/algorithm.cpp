@@ -28,6 +28,8 @@ struct CompareNodes {
 //###################################################
 //                                        3D A*
 //###################################################
+
+
 Node3D* Algorithm::hybridAStar(Node3D& start,
                                const Node3D& goal,
                                Node3D* nodes3D,
@@ -55,6 +57,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
           > priorityQueue;
   priorityQueue O;
 
+
   // update h value
   updateH(start, goal, nodes2D, dubinsLookup, width, height, configurationSpace, visualization);
   // mark start as open
@@ -67,8 +70,13 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   // NODE POINTER
   Node3D* nPred;
   Node3D* nSucc;
+  Node3D* nMid;  
+  //start: 57.8281, 403.438, 4.7967
+  Node3D big_bridge_start = Node3D(59.6406,392.438,4.6652,0,0,nullptr);
+  bool big_bridge_visited = true;
+  Node3D small_bridge_start = Node3D(139.578,308.344,4.35658,0,0,nullptr);
+  bool small_bridge_visited = true;
 
-  // float max = 0.f;
   std::cout << "start seach by hybrid_astar" << std::endl;
   // continue until O empty
   while (!O.empty()) {
@@ -127,9 +135,11 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
     // set index
     iPred = nPred->setIdx(width, height);
     iterations++;
-
+    // //RViz visualization
+    // ros::Duration d(0.003);
     // // RViz visualization
     // if (Constants::visualization) {
+    //   std::cout << "visualization.publishNode3DPoses" << std::endl;
     //   visualization.publishNode3DPoses(*nPred);
     //   visualization.publishNode3DPose(*nPred);
     //   d.sleep();
@@ -151,10 +161,11 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
       // remove node from open list
       O.pop();
 
+
       // _________
       // GOAL TEST
       if (*nPred == goal) {
-        std::cout << "return nPred" << std::endl;
+        std::cout << "return nPred "<< std::endl;
         return nPred;
       }
         // ____________________
@@ -162,13 +173,31 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
       else { 
         // _______________________
         // SEARCH WITH DUBINS SHOT
+
+        if (Constants::dubinsShot && nPred->isInRange(big_bridge_start) && nPred->getPrim() < 3 && big_bridge_visited) {
+          nMid = dubinsShot(*nPred,big_bridge_start, configurationSpace);
+          if (nMid != nullptr && *nMid == big_bridge_start) {
+            std::cout << "get big_bridge_start" << std::endl;
+            nPred=nMid;
+            big_bridge_visited = false;
+            iterations = 0;              
+
+          }
+        }
+        if (Constants::dubinsShot && nPred->isInRange(small_bridge_start) && nPred->getPrim() < 3 && small_bridge_visited) {
+          nMid = dubinsShot(*nPred, small_bridge_start, configurationSpace);
+          if (nMid != nullptr && *nMid == small_bridge_start) {
+            std::cout << "get small_bridge_start" << std::endl;
+            nPred=nMid;
+            small_bridge_visited = false;
+            iterations = 0;       
+          }        
+        }
+
         if (Constants::dubinsShot && nPred->isInRange(goal) && nPred->getPrim() < 3) {
           nSucc = dubinsShot(*nPred, goal, configurationSpace);
-
           if (nSucc != nullptr && *nSucc == goal) {
-            //DEBUG
-            // std::cout << "max diff " << max << std::endl;
-            std::cout << "return nSucc" << std::endl;
+            std::cout << "return dubinsShot nSucc" << std::endl;
             return nSucc;
           }
         }
@@ -223,8 +252,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
       }
     
       if(iterations > Constants::iterations){
-        std::cout << "over iterations"<< std::endl;            
-        std::cout << "iterations" << iterations << std::endl;        
+        std::cout << "over iterations"<< std::endl;                
         return nullptr;
       }
     }
@@ -421,35 +449,35 @@ void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLo
     dubinsCost = dubinsPath.distance(dbStart, dbEnd);
   }
 
-  // if reversing is active use a
-  if (Constants::reverse && !Constants::dubins) {
-    //    ros::Time t0 = ros::Time::now();
-    ompl::base::ReedsSheppStateSpace reedsSheppPath(Constants::r);
-    State* rsStart = (State*)reedsSheppPath.allocState();
-    State* rsEnd = (State*)reedsSheppPath.allocState();
-    rsStart->setXY(start.getX(), start.getY());
-    rsStart->setYaw(start.getT());
-    rsEnd->setXY(goal.getX(), goal.getY());
-    rsEnd->setYaw(goal.getT());
-    reedsSheppCost = reedsSheppPath.distance(rsStart, rsEnd);
-    //    ros::Time t1 = ros::Time::now();
-    //    ros::Duration d(t1 - t0);
-    //    std::cout << "calculated Reed-Sheep Heuristic in ms: " << d * 1000 << std::endl;
-  }
+  // // if reversing is active use a
+  // if (Constants::reverse && !Constants::dubins) {
+  //   //    ros::Time t0 = ros::Time::now();
+  //   ompl::base::ReedsSheppStateSpace reedsSheppPath(Constants::r);
+  //   State* rsStart = (State*)reedsSheppPath.allocState();
+  //   State* rsEnd = (State*)reedsSheppPath.allocState();
+  //   rsStart->setXY(start.getX(), start.getY());
+  //   rsStart->setYaw(start.getT());
+  //   rsEnd->setXY(goal.getX(), goal.getY());
+  //   rsEnd->setYaw(goal.getT());
+  //   reedsSheppCost = reedsSheppPath.distance(rsStart, rsEnd);
+  //   ros::Time t1 = ros::Time::now();
+  //   ros::Duration d(t1 - t0);
+  //   std::cout << "calculated Reed-Sheep Heuristic in ms: " << d * 1000 << std::endl;
+  // }
 
   // if twoD heuristic is activated determine shortest path
   // unconstrained with obstacles
   if (Constants::twoD && !nodes2D[(int)start.getY() * width + (int)start.getX()].isDiscovered()) {
-    //    ros::Time t0 = ros::Time::now();
+       ros::Time t0 = ros::Time::now();
     // create a 2d start node
     Node2D start2d(start.getX(), start.getY(), 0, 0, nullptr);
     // create a 2d goal node
     Node2D goal2d(goal.getX(), goal.getY(), 0, 0, nullptr);
     // run 2d astar and return the cost of the cheapest path for that node
     nodes2D[(int)start.getY() * width + (int)start.getX()].setG(aStar(goal2d, start2d, nodes2D, width, height, configurationSpace, visualization));
-    //    ros::Time t1 = ros::Time::now();
-    //    ros::Duration d(t1 - t0);
-    //    std::cout << "calculated 2D Heuristic in ms: " << d * 1000 << std::endl;
+       ros::Time t1 = ros::Time::now();
+       ros::Duration d(t1 - t0);
+       std::cout << "calculated 2D Heuristic in ms: " << d * 1000 << std::endl;
   }
 
   if (Constants::twoD) {
@@ -509,13 +537,13 @@ Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& config
       x += Constants::dubinsStepSize;
       i++;
     } else {
-      //      std::cout << "Dubins shot collided, discarding the path" << "\n";
+      std::cout << "Dubins shot collided, discarding the path" << "\n";
       // delete all nodes
       delete [] dubinsNodes;
       return nullptr;
     }
   }
 
-  //  std::cout << "Dubins shot connected, returning the path" << "\n";
+   std::cout << "Dubins shot connected, returning the path" << "\n";
   return &dubinsNodes[i - 1];
 }
