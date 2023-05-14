@@ -175,6 +175,8 @@ void Planner::plan() {
     // define list pointers and initialize lists
     Node3D* nodes3D = new Node3D[length]();
     Node2D* nodes2D = new Node2D[width * height]();
+    Map* map = new Map[width*height]();
+    
     float origin_x = grid->info.origin.position.x;
     float origin_y = grid->info.origin.position.y;
 
@@ -185,7 +187,7 @@ void Planner::plan() {
     float t = tf::getYaw(start.pose.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
-    Node3D nStart(x, y, t, 0, 0, nullptr);
+    Node3D nStart(x, y, t, 0, 0, 0, nullptr);
     std::cout << "start: " << x << ", " << y << ", "<< t << std::endl;
     // ___________
     // DEBUG START
@@ -198,14 +200,11 @@ void Planner::plan() {
     t = tf::getYaw(goal.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
-    const Node3D nGoal(x, y, t, 0, 0, nullptr);
+    const Node3D nGoal(x, y, t, 0, 0, 0, nullptr);
     std::cout << "goal: " << x << ", " << y << ", "<< t << std::endl;
     // __________
     // DEBUG GOAL
     //    const Node3D nGoal(155.349, 36.1969, 0.7615936, 0, 0, nullptr);
-
-
-
 
 
     // ___________________________
@@ -218,12 +217,30 @@ void Planner::plan() {
     // path.clear();
     // smoothedPath.clear();
     // FIND THE PATH
-    Node3D* nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization);
+    Node3D*  nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization,map);
+    
     // TRACE THE PATH
     smoother.tracePath(nSolution);
-
     // CREATE THE UPDATED PATH
+    path.updatePath(smoother.getPath());
+
+
+    // CREATE THE UPDATED PATH 
     std::vector<Node3D> nodes = smoother.getPath();
+
+    // UPDATE VISTED COST
+
+    for(int i=0; i<nodes.size();i++){
+      int idx = (int)(nodes[i].getY())*width+(int)(nodes[i].getX());
+      map[idx].setV(100);
+      std::cout << "---------------------------" << endl;
+      std::cout << "map.idx = "  << idx << std::endl;
+      std::cout << "map.v = " << map[idx].getV() << std::endl;
+      std::cout << "----------------------------" << endl;
+    }
+
+
+    // REMAP XY TO REAL_WORLD 
     for (int i = 0; i < nodes.size(); i++){
       nodes[i].setX(origin_x + (nodes[i].getX()*Constants::cellSize));
       nodes[i].setY(origin_y + (nodes[i].getY()*Constants::cellSize));
@@ -231,18 +248,18 @@ void Planner::plan() {
     }
     path.updatePath(nodes);
 
-    ros::Time t1 = ros::Time::now();
-    ros::Duration d(t1 - t0);
-    std::cout << "TIME in ms: " << d * 1000 << std::endl;
-
     // _________________________________
     // PUBLISH THE RESULTS OF THE SEARCH
     path.publishPath();
     path.publishPathNodes();
     path.publishPathVehicles();
-
     createWayPoint(nodes);
 
+    ros::Time t1 = ros::Time::now();
+    ros::Duration d(t1 - t0);
+    std::cout << "TIME in ms: " << d * 1000 << std::endl;
+
+    validGoal = false ;
     delete [] nodes3D;
     delete [] nodes2D;
 

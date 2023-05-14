@@ -24,6 +24,7 @@
 #include "smoother.h"
 #include "visualize.h"
 #include "lookup.h"
+#include "mapcost.h"
 
 namespace HybridAStar {
 /*!

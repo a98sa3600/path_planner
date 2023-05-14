@@ -7,7 +7,8 @@ using namespace HybridAStar;
 float aStar(Node2D& start, Node2D& goal, Node2D* nodes2D, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLookup, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& configurationSpace);
-
+void updateV(Node3D& node,Map* map,int width);
+std::vector<Node3D> vistedList; 
 //###################################################
 //                                    NODE COMPARISON
 //###################################################
@@ -38,7 +39,8 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
                                int height,
                                CollisionDetection& configurationSpace,
                                float* dubinsLookup,
-                               Visualize& visualization) {
+                               Visualize& visualization,
+                               Map* map ) {
 
   // PREDECESSOR AND SUCCESSOR INDEX
   int iPred, iSucc;
@@ -52,14 +54,15 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   // ros::Duration d(0.003);
 
   // OPEN LIST AS BOOST IMPLEMENTATION
-  typedef boost::heap::binomial_heap<Node3D*,
-          boost::heap::compare<CompareNodes>
-          > priorityQueue;
+  typedef boost::heap::binomial_heap<Node3D*,boost::heap::compare<CompareNodes>> priorityQueue;
   priorityQueue O;
 
 
   // update h value
   updateH(start, goal, nodes2D, dubinsLookup, width, height, configurationSpace, visualization);
+
+  // update v value
+  updateV(start,map,width);
   // mark start as open
   start.open();
   // push on priority queue aka open list
@@ -72,63 +75,14 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   Node3D* nSucc;
   Node3D* nMid;  
   //start: 57.8281, 403.438, 4.7967
-  Node3D big_bridge_start = Node3D(59.6406,392.438,4.6652,0,0,nullptr);
+  Node3D big_bridge_start = Node3D(59.6406,392.438,4.6652, 0, 0, 0,nullptr);
   bool big_bridge_visited = true;
-  Node3D small_bridge_start = Node3D(139.578,308.344,4.35658,0,0,nullptr);
+  Node3D small_bridge_start = Node3D(139.578,308.344,4.35658, 0, 0, 0,nullptr);
   bool small_bridge_visited = true;
 
   std::cout << "start seach by hybrid_astar" << std::endl;
   // continue until O empty
   while (!O.empty()) {
-
-    //    // DEBUG
-    //    Node3D* pre = nullptr;
-    //    Node3D* succ = nullptr;
-
-    //    std::cout << "\t--->>>" << std::endl;
-
-    //    for (priorityQueue::ordered_iterator it = O.ordered_begin(); it != O.ordered_end(); ++it) {
-    //      succ = (*it);
-    //      std::cout << "VAL"
-    //                << " | C:" << succ->getC()
-    //                << " | x:" << succ->getX()
-    //                << " | y:" << succ->getY()
-    //                << " | t:" << helper::toDeg(succ->getT())
-    //                << " | i:" << succ->getIdx()
-    //                << " | O:" << succ->isOpen()
-    //                << " | pred:" << succ->getPred()
-    //                << std::endl;
-
-    //      if (pre != nullptr) {
-
-    //        if (pre->getC() > succ->getC()) {
-    //          std::cout << "PRE"
-    //                    << " | C:" << pre->getC()
-    //                    << " | x:" << pre->getX()
-    //                    << " | y:" << pre->getY()
-    //                    << " | t:" << helper::toDeg(pre->getT())
-    //                    << " | i:" << pre->getIdx()
-    //                    << " | O:" << pre->isOpen()
-    //                    << " | pred:" << pre->getPred()
-    //                    << std::endl;
-    //          std::cout << "SCC"
-    //                    << " | C:" << succ->getC()
-    //                    << " | x:" << succ->getX()
-    //                    << " | y:" << succ->getY()
-    //                    << " | t:" << helper::toDeg(succ->getT())
-    //                    << " | i:" << succ->getIdx()
-    //                    << " | O:" << succ->isOpen()
-    //                    << " | pred:" << succ->getPred()
-    //                    << std::endl;
-
-    //          if (pre->getC() - succ->getC() > max) {
-    //            max = pre->getC() - succ->getC();
-    //          }
-    //        }
-    //      }
-
-    //      pre = succ;
-    //    }
 
     // pop node with lowest cost from priority queue
     nPred = O.top();
@@ -173,7 +127,15 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
       else { 
         // _______________________
         // SEARCH WITH DUBINS SHOT
+        if (Constants::dubinsShot && nPred->isInRange(goal) && nPred->getPrim() < 3) {
+          nSucc = dubinsShot(*nPred, goal, configurationSpace);
+          if (nSucc != nullptr && *nSucc == goal) {
+            std::cout << "return dubinsShot nSucc" << std::endl;
+            return nSucc;
+          }
+        }
 
+        // SEARCH WITH DUBINS SHOT FOR BIG BRIDGE
         if (Constants::dubinsShot && nPred->isInRange(big_bridge_start) && nPred->getPrim() < 3 && big_bridge_visited) {
           nMid = dubinsShot(*nPred,big_bridge_start, configurationSpace);
           if (nMid != nullptr && *nMid == big_bridge_start) {
@@ -184,6 +146,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 
           }
         }
+        // SEARCH WITH DUBINS SHOT FOR SMALL BRIDGE
         if (Constants::dubinsShot && nPred->isInRange(small_bridge_start) && nPred->getPrim() < 3 && small_bridge_visited) {
           nMid = dubinsShot(*nPred, small_bridge_start, configurationSpace);
           if (nMid != nullptr && *nMid == small_bridge_start) {
@@ -192,14 +155,6 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
             small_bridge_visited = false;
             iterations = 0;       
           }        
-        }
-
-        if (Constants::dubinsShot && nPred->isInRange(goal) && nPred->getPrim() < 3) {
-          nSucc = dubinsShot(*nPred, goal, configurationSpace);
-          if (nSucc != nullptr && *nSucc == goal) {
-            std::cout << "return dubinsShot nSucc" << std::endl;
-            return nSucc;
-          }
         }
 
         // ______________________________
@@ -216,9 +171,16 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
             // ensure successor is not on closed list or it has the same index as the predecessor
             if (!nodes3D[iSucc].isClosed() || iPred == iSucc) {
 
+
+              // // update v value
+              // updateV(*nSucc,map,width);
+
+              // }
               // calculate new G value
               nSucc->updateG();
               newG = nSucc->getG();
+
+
 
               // if successor not on open list or found a shorter way to the cell
               if (!nodes3D[iSucc].isOpen() || newG < nodes3D[iSucc].getG() || iPred == iSucc) {
@@ -228,6 +190,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 
                 // if the successor is in the same cell but the C value is larger
                 if (iPred == iSucc && nSucc->getC() > nPred->getC() + Constants::tieBreaker) {
+                  // std::cout << "(delete C) = (" << nSucc->getC() << ", " << nPred->getC() << ")" << std::endl;
                   delete nSucc;
                   continue;
                 }
@@ -245,6 +208,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
                 nodes3D[iSucc] = *nSucc;
                 O.push(&nodes3D[iSucc]);
                 delete nSucc;
+
               } else { delete nSucc; }
             } else { delete nSucc; }
           } else { delete nSucc; }
@@ -265,6 +229,18 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   std::cout << "please choose correct start and goal" << std::endl;  
   return nullptr;
 }
+//###################################################
+//                                         COST TO GO
+//###################################################
+void updateV(Node3D& node,Map* map,int width) {
+  int idx = (int)(node.getY())*width+(int)(node.getX());
+  node.setV(map[idx].getV());
+  std::cout << "====================" << endl;
+  std::cout << "map.idx = "  << idx << std::endl;
+  std::cout << "node.v = " << node.getV() << std::endl;
+  std::cout << "====================" << endl;
+}
+
 
 //###################################################
 //                                        2D A*
@@ -492,6 +468,8 @@ void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLo
   start.setH(std::max(reedsSheppCost, std::max(dubinsCost, twoDCost)));
 }
 
+
+
 //###################################################
 //                                        DUBINS SHOT
 //###################################################
@@ -537,7 +515,7 @@ Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& config
       x += Constants::dubinsStepSize;
       i++;
     } else {
-      std::cout << "Dubins shot collided, discarding the path" << "\n";
+      // std::cout << "Dubins shot collided, discarding the path" << "\n";
       // delete all nodes
       delete [] dubinsNodes;
       return nullptr;

@@ -12,6 +12,7 @@ typedef ompl::base::SE2StateSpace::StateType State;
 #include "node2d.h"
 #include "visualize.h"
 #include "collisiondetection.h"
+#include "mapcost.h"
 
 namespace HybridAStar {
 class Node3D;
@@ -24,7 +25,8 @@ class Visualize;
 class Algorithm {
  public:
   /// The deault constructor
-  Algorithm() {}
+  Algorithm() {   
+  }
 
   // HYBRID A* ALGORITHM
   /*!
@@ -49,8 +51,9 @@ class Algorithm {
                              int height,
                              CollisionDetection& configurationSpace,
                              float* dubinsLookup,
-                             Visualize& visualization);
-
+                             Visualize& visualization,
+                             Map* map);
+   
 };
 }
 #endif // ALGORITHM_H

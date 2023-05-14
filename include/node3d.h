@@ -15,14 +15,15 @@ class Node3D {
  public:
 
   /// The default constructor for 3D array initialization
-  Node3D(): Node3D(0, 0, 0, 0, 0, nullptr) {}
+  Node3D(): Node3D(0, 0, 0, 0, 0, 0, nullptr) {}
   /// Constructor for a node with the given arguments
-  Node3D(float x, float y, float t, float g, float h, const Node3D* pred, int prim = 0) {
+  Node3D(float x, float y, float t, float g, float h,float v, const Node3D* pred, int prim = 0) {
     this->x = x;
     this->y = y;
     this->t = t;
     this->g = g;
     this->h = h;
+    this->v = v;
     this->pred = pred;
     this->o = false;
     this->c = false;
@@ -41,8 +42,10 @@ class Node3D {
   float getG() const { return g; }
   /// get the cost-to-come (heuristic value)
   float getH() const { return h; }
-  /// get the total estimated cost
-  float getC() const { return g + h; }
+  /// get the visited path cost
+  float getV() const { return v; }
+  /// get the total estimated cost  
+  float getC() const { return g + h + v; }
   /// get the index of the node in the 3D array
   int getIdx() const { return idx; }
   /// get the number associated with the motion primitive of the node
@@ -66,6 +69,8 @@ class Node3D {
   /// set the cost-to-come (heuristic value)
   void setH(const float& h) { this->h = h; }
   /// set and get the index of the node in the 3D grid
+  void setV(const float& v) { this->v = v; }
+  /// set and get the index of the node in the 3D grid
   int setIdx(int width, int height) { this->idx = (int)(t / Constants::deltaHeadingRad) * width * height + (int)(y) * width + (int)(x); return idx;}
   /// open the node
   void open() { o = true; c = false;}
@@ -77,6 +82,7 @@ class Node3D {
   // UPDATE METHODS
   /// Updates the cost-so-far for the node x' coming from its predecessor. It also discovers the node.
   void updateG();
+
 
   // CUSTOM OPERATORS
   /// Custom operator to compare nodes. Nodes are equal if their x and y position as well as heading is similar.
@@ -115,6 +121,8 @@ class Node3D {
   float g;
   /// the cost-to-go
   float h;
+  /// the cost-visted
+  float v;
   /// the index of the node in the 3D array
   int idx;
   /// the open value

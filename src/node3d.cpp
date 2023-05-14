@@ -63,7 +63,7 @@ Node3D* Node3D::createSuccessor(const int i) {
     tSucc = Helper::normalizeHeadingRad(t - dt[i - 3]);
   }
 
-  return new Node3D(xSucc, ySucc, tSucc, g, 0, this, i);
+  return new Node3D(xSucc, ySucc, tSucc, g, 0, 0, this, i);
 }
 
 
