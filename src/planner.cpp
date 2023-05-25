@@ -28,7 +28,7 @@ Planner::Planner() {
   subGoal = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
 
   if (Constants::startTopic) {
-    subStart = n.subscribe("/current_pose", 1, &Planner::setStart, this);
+    subStart = n.subscribe("/current_pose", 1, &Planner::autoStart, this);
   } else {
     subStart = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
   }  
@@ -85,12 +85,12 @@ void Planner::setMap(const nav_msgs::OccupancyGrid::Ptr map) {
     listener.lookupTransform("/map", "/base_link", ros::Time(0), transform);
 
     // assign the values to start from base_link
-    start.pose.pose.position.x = transform.getOrigin().x();
-    start.pose.pose.position.y = transform.getOrigin().y();
-    tf::quaternionTFToMsg(transform.getRotation(), start.pose.pose.orientation);
+    start.pose.position.x = transform.getOrigin().x();
+    start.pose.position.y = transform.getOrigin().y();
+    tf::quaternionTFToMsg(transform.getRotation(), start.pose.orientation);
 
-    if (grid->info.height >= start.pose.pose.position.y && start.pose.pose.position.y >= 0 &&
-        grid->info.width >= start.pose.pose.position.x && start.pose.pose.position.x >= 0) {
+    if (grid->info.height >= start.pose.position.y && start.pose.position.y >= 0 &&
+        grid->info.width >= start.pose.position.x && start.pose.position.x >= 0) {
       // set the start as valid and plan
       validStart = true;
     } else  {
@@ -105,6 +105,7 @@ void Planner::setMap(const nav_msgs::OccupancyGrid::Ptr map) {
 //                                   INITIALIZE START
 //###################################################
 void Planner::setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& initial) {
+  //retrieving start position
   float x = initial->pose.pose.position.x;
   float y = initial->pose.pose.position.y;
   float t = tf::getYaw(initial->pose.pose.orientation);
@@ -123,14 +124,40 @@ void Planner::setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&
   if ( v(0) <= (grid->info.width)*Constants::cellSize && v(0) >= 0 && 
         v(1) <= (grid->info.height)*Constants::cellSize && v(1) >= 0) {
     validStart = true;
-    start = *initial;
+    start = startN;
 
     if (Constants::manual) { plan();}
 
     // publish start for RViz
-    pubStart.publish(startN);
+    pubStart.publish(start);
   } else {
     std::cout << "invalid start x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
+  }
+}
+
+void Planner::autoStart(const geometry_msgs::PoseStamped::ConstPtr& initial) {
+  if(validGoal){
+    //retrieving start position
+    float x = initial->pose.position.x;
+    float y = initial->pose.position.y;
+    float t = tf::getYaw(initial->pose.orientation);
+
+    std::cout << "I am seeing a new start x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
+    Eigen::VectorXd v(2);
+    v << x-grid->info.origin.position.x, y-grid->info.origin.position.y;
+
+    if (v(0) <= (grid->info.width)*Constants::cellSize && v(0) >= 0 && 
+          v(1) <= (grid->info.height)*Constants::cellSize && v(1) >= 0) {
+      validStart = true;
+      start = *initial;
+
+      if (Constants::manual) { plan();}
+
+      // publish start for RViz
+      pubStart.publish(start);
+    } else {
+      std::cout << "invalid start x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
+    }
   }
 }
 
@@ -182,9 +209,9 @@ void Planner::plan() {
 
     // _________________________
     // retrieving start position
-    float x = (start.pose.pose.position.x-origin_x) / Constants::cellSize;
-    float y = (start.pose.pose.position.y-origin_y) / Constants::cellSize;
-    float t = tf::getYaw(start.pose.pose.orientation);
+    float x = (start.pose.position.x-origin_x) / Constants::cellSize;
+    float y = (start.pose.position.y-origin_y) / Constants::cellSize;
+    float t = tf::getYaw(start.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     Node3D nStart(x, y, t, 0, 0, 0, nullptr);
@@ -216,6 +243,7 @@ void Planner::plan() {
     // // CLEAR THE PATH
     // path.clear();
     // smoothedPath.clear();
+    
     // FIND THE PATH
     Node3D*  nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization,map);
     

@@ -54,8 +54,9 @@ class Planner {
      \brief setStart
      \param start the start pose
   */
-  void setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& start);
+  void setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& initial);
 
+  void autoStart(const geometry_msgs::PoseStamped::ConstPtr& initial);
   /*!
      \brief setGoal
      \param goal the goal pose
@@ -101,7 +102,7 @@ class Planner {
   /// A pointer to the grid the planner runs on
   nav_msgs::OccupancyGrid::Ptr grid;
   /// The start pose set through RViz
-  geometry_msgs::PoseWithCovarianceStamped start;
+  geometry_msgs::PoseStamped start;
   /// The goal pose set through RViz
   geometry_msgs::PoseStamped goal;
   /// Flags for allowing the planner to plan
