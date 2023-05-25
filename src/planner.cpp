@@ -243,7 +243,7 @@ void Planner::plan() {
     // // CLEAR THE PATH
     // path.clear();
     // smoothedPath.clear();
-    
+
     // FIND THE PATH
     Node3D*  nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization,map);
     
@@ -296,9 +296,7 @@ void Planner::plan() {
   }
 }
 
-inline double kmph2mps(double velocity_kmph){
-  return (velocity_kmph * 1000) / (60 * 60);
-}
+
     
 void Planner::createWayPoint(std::vector<Node3D> goal){
     autoware_msgs::LaneArray lane_array;
@@ -312,7 +310,7 @@ void Planner::createWayPoint(std::vector<Node3D> goal){
         wp.pose.pose.position.x = nodes[i].getX();
         wp.pose.pose.position.y = nodes[i].getY();
         wp.pose.pose.position.z = -3893.38; //Setting it wrong may cause problem publishing /safety_waypoint in the Astar_avoid.
-        wp.twist.twist.linear.x = kmph2mps(10);
+        wp.twist.twist.linear.x = Helper::kmph2mps(10);
         wp.change_flag = 0;
         wp.wpstate.steering_state = 0;
         wp.wpstate.accel_state = 0;

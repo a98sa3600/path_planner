@@ -77,6 +77,11 @@ static inline float clamp(float n, float lower, float upper) {
   return std::max(lower, std::min(n, upper));
 }
 
+static inline double kmph2mps(double velocity_kmph){
+  return (velocity_kmph * 1000) / (60 * 60);
+}
+
+
 }
 }
 
