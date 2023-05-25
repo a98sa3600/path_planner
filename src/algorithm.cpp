@@ -7,8 +7,8 @@ using namespace HybridAStar;
 float aStar(Node2D& start, Node2D& goal, Node2D* nodes2D, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLookup, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& configurationSpace);
-void updateV(Node3D& node,Map* map,int width);
-std::vector<Node3D> vistedList; 
+void updateV(Node3D& node,Map* costMap,int width);
+
 //###################################################
 //                                    NODE COMPARISON
 //###################################################
@@ -40,7 +40,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
                                CollisionDetection& configurationSpace,
                                float* dubinsLookup,
                                Visualize& visualization,
-                               Map* map ) {
+                               Map* costMap ) {
 
   // PREDECESSOR AND SUCCESSOR INDEX
   int iPred, iSucc;
@@ -62,7 +62,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   updateH(start, goal, nodes2D, dubinsLookup, width, height, configurationSpace, visualization);
 
   // update v value
-  updateV(start,map,width);
+  updateV(start,costMap,width);
   // mark start as open
   start.open();
   // push on priority queue aka open list
@@ -172,15 +172,12 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
             if (!nodes3D[iSucc].isClosed() || iPred == iSucc) {
 
 
-              // // update v value
-              // updateV(*nSucc,map,width);
+              //update v value
+              updateV(*nSucc,costMap,width);
 
-              // }
               // calculate new G value
               nSucc->updateG();
               newG = nSucc->getG();
-
-
 
               // if successor not on open list or found a shorter way to the cell
               if (!nodes3D[iSucc].isOpen() || newG < nodes3D[iSucc].getG() || iPred == iSucc) {
@@ -234,9 +231,10 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 //###################################################
 void updateV(Node3D& node,Map* map,int width) {
   int idx = (int)(node.getY())*width+(int)(node.getX());
-  node.setV(map[idx].getV());
+  node.setV( 1000 * (map[idx].getV()) );
   std::cout << "====================" << endl;
   std::cout << "map.idx = "  << idx << std::endl;
+  std::cout << "map.V = "  << 1000*map[idx].getV() << std::endl;
   std::cout << "node.v = " << node.getV() << std::endl;
   std::cout << "====================" << endl;
 }

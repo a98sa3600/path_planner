@@ -113,6 +113,8 @@ class Planner {
   Constants::config collisionLookup[Constants::headings * Constants::positions];
   /// A lookup of analytical solutions (Dubin's paths)
   float* dubinsLookup = new float [Constants::headings * Constants::headings * Constants::dubinsWidth * Constants::dubinsWidth];
+  /// A costMap for calculate visted_path cost 
+  Map* costMap;  
 };
 }
 #endif // PLANNER_H

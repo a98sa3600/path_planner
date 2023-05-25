@@ -72,6 +72,7 @@ void Planner::setMap(const nav_msgs::OccupancyGrid::Ptr map) {
     }
   }
 
+  costMap = new Map[width*height]();
   voronoiDiagram.initializeMap(width, height, binMap);
   voronoiDiagram.update();
   voronoiDiagram.visualize();
@@ -202,7 +203,6 @@ void Planner::plan() {
     // define list pointers and initialize lists
     Node3D* nodes3D = new Node3D[length]();
     Node2D* nodes2D = new Node2D[width * height]();
-    Map* map = new Map[width*height]();
     
     float origin_x = grid->info.origin.position.x;
     float origin_y = grid->info.origin.position.y;
@@ -245,7 +245,7 @@ void Planner::plan() {
     // smoothedPath.clear();
 
     // FIND THE PATH
-    Node3D*  nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization,map);
+    Node3D*  nSolution = Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, width, height, configurationSpace, dubinsLookup, visualization,costMap);
     
     // TRACE THE PATH
     smoother.tracePath(nSolution);
@@ -256,20 +256,17 @@ void Planner::plan() {
     // CREATE THE UPDATED PATH 
     std::vector<Node3D> nodes = smoother.getPath();
 
-    // UPDATE VISTED COST
-
-    for(int i=0; i<nodes.size();i++){
-      int idx = (int)(nodes[i].getY())*width+(int)(nodes[i].getX());
-      map[idx].setV(100);
-      std::cout << "---------------------------" << endl;
-      std::cout << "map.idx = "  << idx << std::endl;
-      std::cout << "map.v = " << map[idx].getV() << std::endl;
-      std::cout << "----------------------------" << endl;
-    }
-
-
-    // REMAP XY TO REAL_WORLD 
+    // UPDATE VISTED COST AND REMAP XY TO REAL_WORLD 
+    int tmp = -1;
     for (int i = 0; i < nodes.size(); i++){
+      int idx = (int)(nodes[i].getY())*width+(int)(nodes[i].getX());
+      if(tmp == idx){
+        continue;
+      }
+      costMap[idx].setV(1);  
+      tmp = idx;
+
+
       nodes[i].setX(origin_x + (nodes[i].getX()*Constants::cellSize));
       nodes[i].setY(origin_y + (nodes[i].getY()*Constants::cellSize));
       // std::cout << "(x,y) = " << nodes[i].getX() << ", " << nodes[i].getY() << std::endl;

@@ -17,7 +17,7 @@ class Map {
   /// The default constructor for 2D array initialization.
   Map(): Map(0, 0, 0) {}
   /// Constructor for a node with the given arguments
-  Map(int h, int v, int s) {
+  Map(float h, int v, int s) {
     this->h = h;
     this->v = v;
     this->s = s;
@@ -35,9 +35,9 @@ class Map {
 
   // SETTER METHODS
   /// set the h postion(z-axis)
-  void setH(const int& h) { this->h = h; }
+  void setH(const float& h) { this->h = h; }
   /// set the y position
-  void setV(const int& v) { this->v = v; }
+  void setV(const int& v) { this->v += v; }
   /// set the cost-to-come (heuristic value)
   void setS(const int& s) { this->s = s; }
 
@@ -49,12 +49,13 @@ class Map {
 
 
  private:
+  /// the h postion(z-axis)
+  float h; 
   /// the cost-visted
   int v;
   /// the cost-slide
   int s;
-  /// the h postion(z-axis)
-  int h;
+
 
 };
 }
