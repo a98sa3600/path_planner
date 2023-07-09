@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     tf
     autoware_msgs
+    visualization_msgs
     )
 
 set(SOURCES
@@ -70,6 +71,9 @@ endif(NOT OMPL_FOUND)
 include_directories(include ${catkin_INCLUDE_DIRS})
 include_directories(include ${OMPL_INCLUDE_DIRS})
 include_directories(include include)
+
+add_executable(map_sign src/map_sign.cpp)
+target_link_libraries(map_sign ${catkin_LIBRARIES})
 
 add_executable(tf_broadcaster src/tf_broadcaster.cpp)
 target_link_libraries(tf_broadcaster ${catkin_LIBRARIES})
