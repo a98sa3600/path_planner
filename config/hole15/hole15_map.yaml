@@ -1,4 +1,4 @@
-image: hole15_05.png
+image: route15_resolution05_rtk_ins.png
 resolution: 0.5
 origin: [ 94687, 208444, 0] #[position_x, position_y, yaw(rads)]
 occupied_thresh: 0.1

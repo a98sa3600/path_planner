@@ -1,0 +1,6 @@
+<launch>
+ <!-- Turn on hybrid_astar node -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find hybrid_astar)/config/hole1/hole1_map.yaml" />
+    <node name="map_sign" pkg="hybrid_astar" type="map_sign" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_astar)/config/hole1/hole1.rviz" />
+</launch>
