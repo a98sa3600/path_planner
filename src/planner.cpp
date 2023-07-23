@@ -249,9 +249,9 @@ void Planner::plan() {
     
     // TRACE THE PATH
     smoother.tracePath(nSolution);
-    // CREATE THE UPDATED PATH
-    path.updatePath(smoother.getPath());
-
+    // smoother.smoothPath(voronoiDiagram);
+    // // CREATE THE UPDATED PATH
+    // path.updatePath(smoother.getPath());
 
     // CREATE THE UPDATED PATH 
     std::vector<Node3D> nodes = smoother.getPath();
@@ -266,19 +266,16 @@ void Planner::plan() {
       costMap[idx].setV(1);  
       tmp = idx;
 
-
-      nodes[i].setX(origin_x + (nodes[i].getX()*Constants::cellSize));
-      nodes[i].setY(origin_y + (nodes[i].getY()*Constants::cellSize));
-      // std::cout << "(x,y) = " << nodes[i].getX() << ", " << nodes[i].getY() << std::endl;
     }
-    path.updatePath(nodes);
 
-    // _________________________________
-    // PUBLISH THE RESULTS OF THE SEARCH
-    path.publishPath();
-    path.publishPathNodes();
-    path.publishPathVehicles();
-    createWayPoint(nodes);
+    createWayPoint(nodes,origin_x,origin_y);
+
+    // // _________________________________
+    // // PUBLISH THE RESULTS OF THE SEARCH
+    // path.updatePath(nodes);
+    // path.publishPath();
+    // path.publishPathNodes();
+    // path.publishPathVehicles();
 
     ros::Time t1 = ros::Time::now();
     ros::Duration d(t1 - t0);
@@ -295,19 +292,22 @@ void Planner::plan() {
 
 
     
-void Planner::createWayPoint(std::vector<Node3D> goal){
+void Planner::createWayPoint(std::vector<Node3D>& paths,float& origin_x,float& origin_y){
     autoware_msgs::LaneArray lane_array;
     autoware_msgs::Lane lane;
     std::vector<autoware_msgs::Waypoint> wps;
-    std::vector<Node3D> nodes = goal;
+    // std::vector<Node3D> nodes = paths;
     int count = 0;
-    for (int i = 0; i < nodes.size(); i++){
+    for (int i = 0; i < paths.size(); i++){
         count+=1;
+        paths[i].setX(origin_x + (paths[i].getX()*Constants::cellSize));
+        paths[i].setY(origin_y + (paths[i].getY()*Constants::cellSize));
         autoware_msgs::Waypoint wp;
-        wp.pose.pose.position.x = nodes[i].getX();
-        wp.pose.pose.position.y = nodes[i].getY();
+        wp.pose.pose.position.x = paths[i].getX();
+        wp.pose.pose.position.y = paths[i].getY();
         wp.pose.pose.position.z = -3893.38; //Setting it wrong may cause problem publishing /safety_waypoint in the Astar_avoid.
         wp.twist.twist.linear.x = Helper::kmph2mps(10);
+        // wp.pose.pose.orientation = tf::createQuaternionMsgFromYaw(paths[i].getT() );
         wp.change_flag = 0;
         wp.wpstate.steering_state = 0;
         wp.wpstate.accel_state = 0;
@@ -315,6 +315,9 @@ void Planner::createWayPoint(std::vector<Node3D> goal){
         wp.wpstate.event_state = 0;
         wps.emplace_back(wp);
     }
+
+
+
     std::reverse(wps.begin(), wps.end());
     size_t last = count - 1;
     for (size_t i = 0; i < wps.size(); ++i)

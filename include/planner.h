@@ -68,7 +68,7 @@ class Planner {
   */
   void plan();
 
-  void createWayPoint(std::vector<Node3D> goal);
+  void createWayPoint(std::vector<Node3D>& paths,float& origin_x,float& origin_y);
 
  private:
   /// The node handle
