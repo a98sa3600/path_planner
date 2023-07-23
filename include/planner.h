@@ -63,6 +63,7 @@ class Planner {
   */
   void setGoal(const geometry_msgs::PoseStamped::ConstPtr& goal);
 
+  void autoGoal(const geometry_msgs::PoseStamped::ConstPtr& goal);
   /*!
      \brief The central function entry point making the necessary preparations to start the planning.
   */
@@ -78,9 +79,13 @@ class Planner {
   /// A subscriber for receiving map updates
   ros::Subscriber subMap;
   /// A subscriber for receiving goal updates
-  ros::Subscriber subGoal;
+  ros::Subscriber subGoal_manual;
   /// A subscriber for receiving start updates
-  ros::Subscriber subStart;
+  ros::Subscriber subStart_manual;
+  /// A subscriber for receiving goal updates
+  ros::Subscriber subGoal_auto;
+  /// A subscriber for receiving start updates
+  ros::Subscriber subStart_auto;
   /// A listener that awaits transforms
   tf::TransformListener listener;
   /// A transform for moving start positions

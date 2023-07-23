@@ -25,14 +25,15 @@ Planner::Planner() {
     subMap = n.subscribe("/occ_map", 1, &Planner::setMap, this);
   }
 
-  subGoal = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
+  if(Constants::autoTopic){
+    subGoal_auto = n.subscribe("/taget_pose/goal", 1, &Planner::autoGoal, this);
+    subStart_auto = n.subscribe("/current_pose", 1, &Planner::autoStart, this);
+  }else{
+    subGoal_manual = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
+    subStart_manual = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
+  }
 
-  if (Constants::startTopic) {
-    subStart = n.subscribe("/current_pose", 1, &Planner::autoStart, this);
-  } else {
-    subStart = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
-  }  
-  
+   
 };
 
 //###################################################
@@ -186,7 +187,27 @@ void Planner::setGoal(const geometry_msgs::PoseStamped::ConstPtr& end) {
     std::cout << "invalid goal x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
   }
 }
+void Planner::autoGoal(const geometry_msgs::PoseStamped::ConstPtr& end) {
+  // retrieving goal position
+  float x = end->pose.position.x;
+  float y = end->pose.position.y;
+  float t = tf::getYaw(end->pose.orientation);
 
+  std::cout << "I am seeing a new goal x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
+  Eigen::VectorXd v(2);
+  v << x-grid->info.origin.position.x, y-grid->info.origin.position.y;
+
+  if (v(0) <= (grid->info.width)*Constants::cellSize && v(0) >= 0 && 
+        v(1) <= (grid->info.height)*Constants::cellSize && v(1) >= 0) {
+    validGoal = true;
+    goal = *end;
+
+    if (Constants::manual) { plan();}
+
+  } else {
+    std::cout << "invalid goal x:" << x << " y:" << y << " t:" << Helper::toDeg(t) << std::endl;
+  }
+}
 //###################################################
 //                                      PLAN THE PATH
 //###################################################

@@ -20,7 +20,7 @@
     <arg name="end_point_offset" default="1" />
     <arg name="use_decision_maker" default="false" />
     
-    <node name="hybrid_astar" pkg="hybrid_astar" type="hybrid_astar" output="screen"/> 
+    <node name="hybrid_astar" pkg="hybrid_astar" type="hybrid_astar" output="screen" />
     <node name="tf_broadcaster" pkg="hybrid_astar" type="tf_broadcaster" />
     <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(find hybrid_astar)/config/hole1/hole1_map.yaml" />
     <node name="map_sign" pkg="hybrid_astar" type="map_sign" />

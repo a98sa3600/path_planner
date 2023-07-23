@@ -49,10 +49,10 @@ static const bool dubins = true;
    \todo not yet functional
 */
 static const bool dubinsLookup = false && dubins;
-/// A flag to toggle the 2D heuristic (true = on; false = off)
+/// A flag to toggle the 2D heuristic (true = on; false = off)s
 static const bool twoD = true;
-/// A flag to toggle topic of start pose(ture = /current_pose ,false = /astar/initialpose ) 
-static const bool startTopic = false;
+/// A flag to toggle topic of start and goal pose
+static const bool autoTopic = true;
 // _________________
 // GENERAL CONSTANTS
 

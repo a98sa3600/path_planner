@@ -48,12 +48,16 @@ int main(int argc, char** argv) {
 
   message("cell size: ", HybridAStar::Constants::cellSize);
 
-  if (HybridAStar::Constants::manual) {
-    message("mode: ", "manual");
+  // if (HybridAStar::Constants::manual) {
+  //   message("mode: ", "manual");
+  // } else {
+  //   message("mode: ", "auto");
+  // }
+  if (HybridAStar::Constants::autoTopic) {
+    message("mode: ", "autoTopic");
   } else {
-    message("mode: ", "auto");
+    message("mode: ", "manual");
   }
-
   ros::init(argc, argv, "a_star");
 
   HybridAStar::Planner hy;
