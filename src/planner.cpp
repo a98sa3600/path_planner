@@ -26,7 +26,7 @@ Planner::Planner() {
   }
 
   if(Constants::autoTopic){
-    subGoal_auto = n.subscribe("/taget_pose/goal", 1, &Planner::autoGoal, this);
+    subGoal_auto = n.subscribe("/target_pose/goal", 1, &Planner::autoGoal, this);
     subStart_auto = n.subscribe("/current_pose", 1, &Planner::autoStart, this);
   }else{
     subGoal_manual = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
@@ -279,7 +279,7 @@ void Planner::plan() {
 
     // UPDATE VISTED COST AND REMAP XY TO REAL_WORLD 
     int tmp = -1;
-    for (int i = 0; i < nodes.size(); i++){
+    for (size_t i = 0; i < nodes.size(); i++){
       int idx = (int)(nodes[i].getY())*width+(int)(nodes[i].getX());
       if(tmp == idx){
         continue;
@@ -303,6 +303,7 @@ void Planner::plan() {
     std::cout << "TIME in ms: " << d * 1000 << std::endl;
 
     validGoal = false ;
+    validStart = false ;
     delete [] nodes3D;
     delete [] nodes2D;
 
@@ -319,7 +320,7 @@ void Planner::createWayPoint(std::vector<Node3D>& paths,float& origin_x,float& o
     std::vector<autoware_msgs::Waypoint> wps;
     // std::vector<Node3D> nodes = paths;
     int count = 0;
-    for (int i = 0; i < paths.size(); i++){
+    for (size_t i = 0; i < paths.size(); i++){
         count+=1;
         paths[i].setX(origin_x + (paths[i].getX()*Constants::cellSize));
         paths[i].setY(origin_y + (paths[i].getY()*Constants::cellSize));
