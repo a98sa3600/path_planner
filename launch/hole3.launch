@@ -22,9 +22,7 @@
     
     <node name="hybrid_astar" pkg="hybrid_astar" type="hybrid_astar" output="screen"/> 
     <node name="tf_broadcaster" pkg="hybrid_astar" type="tf_broadcaster" />
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find hybrid_astar)/config/hole3/hole3_map.yaml" />
-    <node name="map_sign" pkg="hybrid_astar" type="map_sign" />
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_astar)/config/hole3/hole3.rviz" />
+    <include file="$(find hybrid_astar)/launch/map3.launch" />
     <node pkg="waypoint_maker" type="waypoint_replanner" name="waypoint_replanner" output="screen">
         <param name="replanning_mode" value="$(arg replanning_mode)" />
         <param name="realtime_tuning_mode" value="$(arg realtime_tuning_mode)" />
