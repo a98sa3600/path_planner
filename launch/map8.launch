@@ -1,0 +1,11 @@
+<launch>
+
+    <arg name="hole_map_sign" value="$(find hybrid_astar)/config/hole8/hole8_map_sign.csv"/>
+ <!-- Turn on hybrid_astar node -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find hybrid_astar)/config/hole8/hole8_map.yaml" />
+    <node name="map_sign" pkg="hybrid_astar" type="map_sign" output="screen">
+        <param name="hole_map_sign" value="$(arg hole_map_sign)" type="string"/>
+    </node>    
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hybrid_astar)/config/hole8/hole8.rviz" />
+</launch>
