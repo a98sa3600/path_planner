@@ -20,8 +20,24 @@ uint8_t E_index[] = {9,10,11,16,23,24,25,30,37,38,39};
 uint8_t F_index[] = {9,10,11,16,23,24,25,30,37};
 uint8_t G_index[] = {8,9,10,11,15,22,24,25,26,29,32,36,37,38,39};
 uint8_t H_index[] = {9,11,16,18,23,24,25,30,32,37,39};
+uint8_t I_index[] = {9,10,11,17,24,31,37,38,39};
+uint8_t J_index[] = {9,10,11,17,24,31,37,38};
+uint8_t K_index[] = {9,12,16,18,23,24,30,32,37,40};
+uint8_t L_index[] = {9,16,23,30,37,38,39};
+uint8_t M_index[] = {8,12,15,16,18,19,22,24,26,29,33,36,40};
+uint8_t N_index[] = {8,12,15,16,19,22,24,26,29,32,33,};
+uint8_t O_index[] = {9,10,11,16,18,23,25,30,32,37,38,39};
+uint8_t P_index[] = {9,10,11,16,18,23,24,25,30,37};
+uint8_t Q_index[] = {9,10,11,16,18,23,25,30,32,37,38,39,40};
+uint8_t R_index[] = {9,10,11,16,18,23,24,25,30,31,37,39};
+uint8_t S_index[] = {9,10,11,16,23,24,25,32,37,38,39};
+uint8_t T_index[] = {9,10,11,17,24,31,38};
 
-uint8_t *ALL_index[] = {A_index,B_index,C_index,D_index,E_index,F_index,G_index,H_index};
+
+
+uint8_t *ALL_index[] = {A_index,B_index,C_index,D_index,E_index,F_index,G_index,H_index,
+                      I_index,J_index,K_index,L_index,M_index,N_index,N_index,O_index,
+                      R_index,S_index,T_index};
 
 typedef struct point{
 	int id;
@@ -35,12 +51,14 @@ void addSign(point_t &pt){
     uint8_t i = 0;
     uint8_t red_flag=0;
     uint8_t index_number = pt.id;
+    float step_x =0.0;
+    float step_y =0.0;
     for(uint8_t x=0;x<sign_row;x++){
         for(uint8_t y=0;y<sign_column;y++){
             geometry_msgs::Point p;
-            p.x = (int32_t)pt.x+y;
-            p.y = (int32_t)pt.y-x;
-            p.z = (int32_t)-3893;           
+            p.x = (int32_t)pt.x+step_y;
+            p.y = (int32_t)pt.y-step_x;
+            p.z = (int32_t)-5000;           
             if(red_flag == ALL_index[index_number][i] ){
                 points_red.points.push_back(p);
                 i++;
@@ -48,7 +66,10 @@ void addSign(point_t &pt){
                 points_green.points.push_back(p);
             }
             red_flag++;
+            step_y+=0.5;
         }
+      step_x+=0.5;
+      step_y=0;
     }
 }
 
@@ -63,9 +84,11 @@ void parseColumns(const std::string& line, std::vector<std::string>* columns){
       }
       column.erase(res);
     }
+
     if (!column.empty()){
       columns->emplace_back(column);
     }
+
   }
 }
 
@@ -127,8 +150,8 @@ int main( int argc, char** argv )
         points_red.id = 0;
         points_green.id = 1;
         // Set the scale of the marker -- 1x1x1 here means 1m on a side
-        points_red.scale.x = points_green.scale.x = 1;
-        points_red.scale.y = points_green.scale.y = 1;
+        points_red.scale.x = points_green.scale.x = 0.5;
+        points_red.scale.y = points_green.scale.y = 0.5;
         // points_red.scale.z = points_green.scale.z= 0.1;
 
         // Set the color -- be sure to set alpha to something non-zero!
