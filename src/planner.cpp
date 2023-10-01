@@ -26,6 +26,8 @@ Planner::Planner() {
   }
 
   if(Constants::autoTopic){
+    subGoal_manual = n.subscribe("/move_base_simple/goal", 1, &Planner::setGoal, this);
+    subStart_manual = n.subscribe("/astar/initialpose", 1, &Planner::setStart, this);
     subGoal_auto = n.subscribe("/target_pose/goal", 1, &Planner::autoGoal, this);
     subStart_auto = n.subscribe("/current_pose", 1, &Planner::autoStart, this);
   }else{
@@ -319,7 +321,7 @@ void Planner::createWayPoint(std::vector<Node3D>& paths,float& origin_x,float& o
     autoware_msgs::Lane lane;
     std::vector<autoware_msgs::Waypoint> wps;
     // std::vector<Node3D> nodes = paths;
-    int count = 0;
+    size_t count = 0;
     for (size_t i = 0; i < paths.size(); i++){
         count+=1;
         paths[i].setX(origin_x + (paths[i].getX()*Constants::cellSize));
@@ -328,7 +330,12 @@ void Planner::createWayPoint(std::vector<Node3D>& paths,float& origin_x,float& o
         wp.pose.pose.position.x = paths[i].getX();
         wp.pose.pose.position.y = paths[i].getY();
         wp.pose.pose.position.z = -3893.38; //Setting it wrong may cause problem publishing /safety_waypoint in the Astar_avoid.
-        wp.twist.twist.linear.x = Helper::kmph2mps(10);
+        if(  ((paths.size()-count) < 15) || count<15 ){
+            wp.twist.twist.linear.x = Helper::kmph2mps(7);
+        }else{
+            wp.twist.twist.linear.x = Helper::kmph2mps(14);
+        }
+        
         // wp.pose.pose.orientation = tf::createQuaternionMsgFromYaw(paths[i].getT() );
         wp.change_flag = 0;
         wp.wpstate.steering_state = 0;
