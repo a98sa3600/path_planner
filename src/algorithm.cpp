@@ -74,11 +74,11 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
   Node3D* nPred;
   Node3D* nSucc;
   Node3D* nMid;  
-  //start: 57.8281, 403.438, 4.7967
-  Node3D big_bridge_start = Node3D(59.6406,392.438,4.6652, 0, 0, 0,nullptr);
-  bool big_bridge_visited = true;
-  Node3D small_bridge_start = Node3D(139.578,308.344,4.35658, 0, 0, 0,nullptr);
-  bool small_bridge_visited = true;
+  // //start: 57.8281, 403.438, 4.7967
+  // Node3D big_bridge_start = Node3D(59.6406,392.438,4.6652, 0, 0, 0,nullptr);
+  // bool big_bridge_visited = true;
+  // Node3D small_bridge_start = Node3D(139.578,308.344,4.35658, 0, 0, 0,nullptr);
+  // bool small_bridge_visited = true;
 
   std::cout << "start seach by hybrid_astar" << std::endl;
   // continue until O empty
@@ -135,27 +135,27 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
           }
         }
 
-        // SEARCH WITH DUBINS SHOT FOR BIG BRIDGE
-        if (Constants::dubinsShot && nPred->isInRange(big_bridge_start) && nPred->getPrim() < 3 && big_bridge_visited) {
-          nMid = dubinsShot(*nPred,big_bridge_start, configurationSpace);
-          if (nMid != nullptr && *nMid == big_bridge_start) {
-            std::cout << "get big_bridge_start" << std::endl;
-            nPred=nMid;
-            big_bridge_visited = false;
-            iterations = 0;              
+        // // SEARCH WITH DUBINS SHOT FOR BIG BRIDGE
+        // if (Constants::dubinsShot && nPred->isInRange(big_bridge_start) && nPred->getPrim() < 3 && big_bridge_visited) {
+        //   nMid = dubinsShot(*nPred,big_bridge_start, configurationSpace);
+        //   if (nMid != nullptr && *nMid == big_bridge_start) {
+        //     std::cout << "get big_bridge_start" << std::endl;
+        //     nPred=nMid;
+        //     big_bridge_visited = false;
+        //     iterations = 0;              
 
-          }
-        }
-        // SEARCH WITH DUBINS SHOT FOR SMALL BRIDGE
-        if (Constants::dubinsShot && nPred->isInRange(small_bridge_start) && nPred->getPrim() < 3 && small_bridge_visited) {
-          nMid = dubinsShot(*nPred, small_bridge_start, configurationSpace);
-          if (nMid != nullptr && *nMid == small_bridge_start) {
-            std::cout << "get small_bridge_start" << std::endl;
-            nPred=nMid;
-            small_bridge_visited = false;
-            iterations = 0;       
-          }        
-        }
+        //   }
+        // }
+        // // SEARCH WITH DUBINS SHOT FOR SMALL BRIDGE
+        // if (Constants::dubinsShot && nPred->isInRange(small_bridge_start) && nPred->getPrim() < 3 && small_bridge_visited) {
+        //   nMid = dubinsShot(*nPred, small_bridge_start, configurationSpace);
+        //   if (nMid != nullptr && *nMid == small_bridge_start) {
+        //     std::cout << "get small_bridge_start" << std::endl;
+        //     nPred=nMid;
+        //     small_bridge_visited = false;
+        //     iterations = 0;       
+        //   }        
+        // }
 
         // ______________________________
         // SEARCH WITH FORWARD SIMULATION
@@ -232,11 +232,11 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 void updateV(Node3D& node,Map* map,int width) {
   int idx = (int)(node.getY())*width+(int)(node.getX());
   node.setV( 1000 * (map[idx].getV()) );
-  std::cout << "====================" << endl;
-  std::cout << "map.idx = "  << idx << std::endl;
-  std::cout << "map.V = "  << 1000*map[idx].getV() << std::endl;
-  std::cout << "node.v = " << node.getV() << std::endl;
-  std::cout << "====================" << endl;
+  // std::cout << "====================" << endl;
+  // std::cout << "map.idx = "  << idx << std::endl;
+  // std::cout << "map.V = "  << 1000*map[idx].getV() << std::endl;
+  // std::cout << "node.v = " << node.getV() << std::endl;
+  // std::cout << "====================" << endl;
 }
 
 
@@ -520,6 +520,6 @@ Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& config
     }
   }
 
-   std::cout << "Dubins shot connected, returning the path" << "\n";
+  //  std::cout << "Dubins shot connected, returning the path" << "\n";
   return &dubinsNodes[i - 1];
 }
