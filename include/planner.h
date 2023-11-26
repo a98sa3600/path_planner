@@ -3,6 +3,11 @@
 
 #include <iostream>
 #include <ctime>
+#include <string> 
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include "std_msgs/Bool.h"
 
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
@@ -51,26 +56,51 @@ class Planner {
   void setMap(const nav_msgs::OccupancyGrid::Ptr map);
 
   /*!
-     \brief setStart
+     \brief Set the starting point
      \param start the start pose
   */
   void setStart(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& initial);
 
   void autoStart(const geometry_msgs::PoseStamped::ConstPtr& initial);
+
   /*!
-     \brief setGoal
+     \brief Set the destination
      \param goal the goal pose
   */
   void setGoal(const geometry_msgs::PoseStamped::ConstPtr& goal);
 
   void autoGoal(const geometry_msgs::PoseStamped::ConstPtr& goal);
+
+  /*!
+     \brief Use bool to decide whether to drive out
+     \param out the driveing out switch
+  */
+  void setOut(const std_msgs::Bool::ConstPtr& out);
+
+  /*!
+     \brief To confirm whether special planning processing is required.
+  */
+  void check_to_plan();
+
   /*!
      \brief The central function entry point making the necessary preparations to start the planning.
+            plan: Standard Processing
+            hole15_case_plan: Special case processing (hole 15)
   */
   void plan();
+  void hole15_case_plan();
 
-  void createWayPoint(std::vector<Node3D>& paths,float& origin_x,float& origin_y);
+  /*!
+     \brief After planning the path, convert it into waypoints.
+  */
+  void createWayPoint(std::vector<Node3D>& paths);
+  
+  /*! 
+     \brief To publish the final set of waypoints.
+  */
+  void publishWayPoint();
 
+ 
  private:
   /// The node handle
   ros::NodeHandle n;
@@ -86,6 +116,8 @@ class Planner {
   ros::Subscriber subGoal_auto;
   /// A subscriber for receiving start updates
   ros::Subscriber subStart_auto;
+  /// A subscriber for receiving driving out updates
+  ros::Subscriber subDrive_out;
   /// A listener that awaits transforms
   tf::TransformListener listener;
   /// A transform for moving start positions
@@ -120,6 +152,29 @@ class Planner {
   float* dubinsLookup = new float [Constants::headings * Constants::headings * Constants::dubinsWidth * Constants::dubinsWidth];
   /// A costMap for calculate visted_path cost 
   Map* costMap;  
+  
+  /// A Conversion register for converting paths to waypoints
+  std::vector<autoware_msgs::Waypoint> wps;
+  
+  /// A set of drive_in waypoints by loading csv
+  bool drive_in = true;
+  std::string waypoint_in_file_path;
+  std::vector<autoware_msgs::Waypoint> pre_waypoints_in;
+  /// A set of drive_out waypoints by loading csv
+  bool drive_out = false;
+  std::string waypoint_out_file_path;
+  std::vector<autoware_msgs::Waypoint> pre_waypoints_out;
+
+  /// A set of parameters to handle Special_Case(Hole15)
+  bool hole15_switch = false;
+  bool hole15_bridge = false;
+  int hole15_bridge_count = 1;
+  std::string waypoint_big_bridge_file_path; 
+  std::vector<autoware_msgs::Waypoint> pre_waypoints_bridge;
+  std::string waypoint_small_bridge_file_path;
+  std::vector<autoware_msgs::Waypoint> first_part_waypoints;
+  std::vector<autoware_msgs::Waypoint> second_part_waypoints;
+  
 };
 }
 #endif // PLANNER_H

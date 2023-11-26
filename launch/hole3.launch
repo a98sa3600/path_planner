@@ -19,7 +19,10 @@
     <arg name="braking_distance" default="5" />
     <arg name="end_point_offset" default="1" />
     <arg name="use_decision_maker" default="false" />
-    
+
+    <param name="hole_drive_in" value="$(find hybrid_astar)/waypoints_in/hole3_in.csv" />
+    <param name="hole_drive_out" value="$(find hybrid_astar)/waypoints_out/hole3_out.csv" />
+        
     <node name="hybrid_astar" pkg="hybrid_astar" type="hybrid_astar" output="screen"/> 
     <node name="tf_broadcaster" pkg="hybrid_astar" type="tf_broadcaster" />
     <include file="$(find hybrid_astar)/launch/map3.launch" />

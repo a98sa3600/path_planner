@@ -51,11 +51,7 @@ int main(int argc, char** argv) {
   // } else {
   //   message("mode: ", "auto");
   // }
-  if (HybridAStar::Constants::autoTopic) {
-    message("mode: ", "autoTopic");
-  } else {
-    message("mode: ", "manual");
-  }
+  
   ros::init(argc, argv, "a_star");
 
   HybridAStar::Planner hy;

@@ -36,7 +36,7 @@ uint8_t T_index[] = {9,10,11,17,24,31,38};
 
 
 uint8_t *ALL_index[] = {A_index,B_index,C_index,D_index,E_index,F_index,G_index,H_index,
-                      I_index,J_index,K_index,L_index,M_index,N_index,N_index,O_index,
+                      I_index,J_index,K_index,L_index,M_index,N_index,O_index,P_index,Q_index,
                       R_index,S_index,T_index};
 
 typedef struct point{

@@ -1,0 +1,6 @@
+image: route12_resolution05_rtk_1016.png
+resolution: 0.5
+origin: [ 94665, 208890, 0] #[position_x, position_y, yaw(rads)]
+occupied_thresh: 0.1
+free_thresh: 0.05
+negate: 0

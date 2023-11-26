@@ -51,8 +51,13 @@ static const bool dubins = true;
 static const bool dubinsLookup = false && dubins;
 /// A flag to toggle the 2D heuristic (true = on; false = off)s
 static const bool twoD = true;
-/// A flag to toggle topic of start and goal pose
-static const bool autoTopic = true;
+
+static const double hole15_profile_a = -0.73627761273;
+
+static const double hole15_profile_b = 278353.396048;
+
+
+
 // _________________
 // GENERAL CONSTANTS
 
